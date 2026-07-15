@@ -1,4 +1,3 @@
-import { userCreds } from "@/userData";
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -28,11 +27,6 @@ export async function POST() {
       process.env.NEXT_LOGIN_REFRESH_SECRET!,
     );
     const { payload } = await jwtVerify(token, refreshSecret);
-
-    const user = userCreds.find((item) => item.email === payload.email);
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     const accessSecret = new TextEncoder().encode(
       process.env.NEXT_LOGIN_ACCESS_SECRET!,
