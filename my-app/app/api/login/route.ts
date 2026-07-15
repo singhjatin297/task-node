@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { getBackendUrl } from "../backend-url";
 
 interface userCredentials {
   email: string;
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, password }: userCredentials = body;
 
-    const res = await fetch("http://localhost:8080/login", {
+    const res = await fetch(getBackendUrl("login"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

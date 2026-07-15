@@ -31,7 +31,6 @@ export default function Login() {
         throw new Error(result.error ?? "Login failed");
       }
 
-      debugger;
       setToken(result.token);
       router.push("/dashboard");
     } catch (err) {

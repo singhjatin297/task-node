@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { getBackendUrl } from "../backend-url";
 
 type TaskStatus = "STARTED" | "IN_PROGRESS" | "FINISHED";
 
@@ -50,7 +51,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await fetch("http://localhost:8080/api/tasks", {
+    const data = await fetch(getBackendUrl("api/tasks"), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -109,7 +110,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const response = await fetch("http://localhost:8080/api/tasks", {
+    const response = await fetch(getBackendUrl("api/tasks"), {
       method: "POST",
       body: JSON.stringify(body),
       headers: {
@@ -182,7 +183,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const response = await fetch(`http://localhost:8080/api/tasks/${body.id}`, {
+    const response = await fetch(getBackendUrl(`api/tasks/${body.id}`), {
       method: "PUT",
       body: JSON.stringify(body),
       headers: {
@@ -222,7 +223,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
 
-    const response = await fetch(`http://localhost:8080/api/tasks/${body.id}`, {
+    const response = await fetch(getBackendUrl(`api/tasks/${body.id}`), {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
