@@ -55,7 +55,7 @@ const readTasks = (payload: unknown) => {
 
   const { tasks: data } = payload;
 
-  console.log("Inside Read Tasks", data);
+  console.log("Inside Read Tasks: ", data);
 
   return data?.filter((item): item is Task => {
     if (!isObject(item)) {
