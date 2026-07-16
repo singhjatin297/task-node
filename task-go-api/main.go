@@ -351,11 +351,11 @@ func connect() (*pgxpool.Pool, error) {
 }
 
 func connectRedis() *redis.Client {
-	redisURL := os.Getenv("REDIS_URL")
+	redisURL := os.Getenv("REDIS_HOST")
 	if redisURL != "" {
 		opts, err := redis.ParseURL(redisURL)
 		if err != nil {
-			log.Fatal("Invalid REDIS_URL:", err)
+			log.Fatal("Invalid REDIS_HOST:", err)
 		}
 		client := redis.NewClient(opts)
 
