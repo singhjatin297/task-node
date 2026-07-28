@@ -2,20 +2,22 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getBackendUrl } from "../backend-url";
 
-type TaskStatus = "STARTED" | "IN_PROGRESS" | "FINISHED";
+type TaskStatus = "STARTED" | "IN PROGRESS" | "COMPLETED";
 
 type CreateTaskBody = {
   title?: string;
+  description?: string;
   status?: unknown;
 };
 
 type UpdateTaskBody = {
   id?: unknown;
   title?: unknown;
+  description?: unknown;
   status?: unknown;
 };
 
-const VALID_STATUSES: TaskStatus[] = ["STARTED", "IN_PROGRESS", "FINISHED"];
+const VALID_STATUSES: TaskStatus[] = ["STARTED", "IN PROGRESS", "COMPLETED"];
 
 const isTaskStatus = (value: unknown): value is TaskStatus =>
   typeof value === "string" && VALID_STATUSES.includes(value as TaskStatus);
@@ -34,12 +36,6 @@ const getAuthHeader = async (request: Request): Promise<string | null> => {
     return authorization;
   }
 
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
-  if (token) {
-    return `Bearer ${token}`;
-  }
-
   return null;
 };
 
@@ -51,7 +47,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await fetch(getBackendUrl("api/tasks"), {
+    const data = await fetch(getBackendUrl("tasksapi/tasks"), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -105,12 +101,12 @@ export async function POST(request: Request) {
 
     if (body.status !== undefined && !isTaskStatus(body.status)) {
       return NextResponse.json(
-        { error: "status must be STARTED, IN_PROGRESS, or FINISHED" },
+        { error: "status must be STARTED, IN PROGRESS, or COMPLETED" },
         { status: 400 },
       );
     }
 
-    const response = await fetch(getBackendUrl("api/tasks"), {
+    const response = await fetch(getBackendUrl("tasksapi/tasks"), {
       method: "POST",
       body: JSON.stringify(body),
       headers: {
@@ -140,7 +136,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PATCH(request: Request) {
   try {
     const authHeader = await getAuthHeader(request);
 
@@ -154,7 +150,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
 
-    const updates: { title?: string; status?: TaskStatus } = {};
+    const updates: {
+      title?: string;
+      description?: string;
+      status?: TaskStatus;
+    } = {};
 
     if (body.title !== undefined) {
       if (typeof body.title !== "string" || body.title.trim() === "") {
@@ -166,10 +166,23 @@ export async function PUT(request: Request) {
       updates.title = body.title.trim();
     }
 
+    if (body.description !== undefined) {
+      if (
+        typeof body.description !== "string" ||
+        body.description.trim() === ""
+      ) {
+        return NextResponse.json(
+          { error: "description must be a non-empty string" },
+          { status: 400 },
+        );
+      }
+      updates.description = body.description.trim();
+    }
+
     if (body.status !== undefined) {
       if (!isTaskStatus(body.status)) {
         return NextResponse.json(
-          { error: "status must be STARTED, IN_PROGRESS, or FINISHED" },
+          { error: "status must be STARTED, IN PROGRESS, or COMPLETED" },
           { status: 400 },
         );
       }
@@ -183,8 +196,8 @@ export async function PUT(request: Request) {
       );
     }
 
-    const response = await fetch(getBackendUrl(`api/tasks/${body.id}`), {
-      method: "PUT",
+    const response = await fetch(getBackendUrl(`tasksapi/tasks/${body.id}`), {
+      method: "PATCH",
       body: JSON.stringify(body),
       headers: {
         "Content-Type": "application/json",
@@ -223,7 +236,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
 
-    const response = await fetch(getBackendUrl(`api/tasks/${body.id}`), {
+    const response = await fetch(getBackendUrl(`tasksapi/tasks/${body.id}`), {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

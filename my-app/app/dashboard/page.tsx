@@ -7,23 +7,26 @@ import { useApiClient } from "@/APIClient";
 import TaskCard from "@/components/TaskCard";
 import { useAuth } from "@/context/auth";
 
-type TaskStatus = "STARTED" | "IN_PROGRESS" | "COMPLETED";
+type TaskStatus = "STARTED" | "IN PROGRESS" | "COMPLETED";
 
 type Task = {
   id: string;
   title: string;
+  description: string;
   status: TaskStatus;
 };
 
 type TaskForm = {
   id: string;
   title: string;
+  description: string;
   status: TaskStatus;
 };
 
 const defaultForm: TaskForm = {
   id: "",
   title: "",
+  description: "",
   status: "STARTED",
 };
 
@@ -33,7 +36,9 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 };
 
 const isStatus = (value: string): value is TaskStatus => {
-  return value === "STARTED" || value === "IN_PROGRESS" || value === "FINISHED";
+  return (
+    value === "STARTED" || value === "IN PROGRESS" || value === "COMPLETED"
+  );
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> => {
@@ -65,6 +70,7 @@ const readTasks = (payload: unknown) => {
     return (
       typeof item.id === "string" &&
       typeof item.title === "string" &&
+      typeof item.description === "string" &&
       typeof item.status === "string" &&
       isStatus(item.status)
     );
@@ -80,6 +86,7 @@ const readTask = (payload: unknown) => {
   if (
     typeof value.id !== "string" ||
     typeof value.title !== "string" ||
+    typeof value.description !== "string" ||
     typeof value.status !== "string" ||
     !isStatus(value.status)
   ) {
@@ -89,6 +96,7 @@ const readTask = (payload: unknown) => {
   return {
     id: value.id,
     title: value.title,
+    description: value.description,
     status: value.status,
   };
 };
@@ -107,42 +115,32 @@ export default function Dashboard() {
   const [isPending, startTransition] = useTransition();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  useEffect(() => {
-    const loadTasks = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+  const loadTasks = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        const res = await fetch("/api/tasks", {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+      const res = await apiClient("/api/tasks", { method: "GET" });
 
-        const payload = await res.json();
-
-        if (!payload) {
-          throw new Error("Failed to fetch tasks");
-        }
-
-        // const message = readError(payload);
-        // if (message) {
-        //   throw new Error(message);
-        // }
-
-        console.log("TASKS Data", readTasks(payload));
-        console.log("TASKS Data GO", payload);
-        debugger;
-        setTasks(payload?.tasks);
-      } catch (fetchError) {
-        setError(getErrorMessage(fetchError, "Failed to fetch tasks"));
-      } finally {
-        setIsLoading(false);
+      if (!res) {
+        throw new Error("Network request failed or returned no response");
       }
-    };
 
+      const payload = await res.json();
+
+      if (!payload) {
+        throw new Error("Failed to fetch tasks");
+      }
+
+      setTasks(readTasks(payload));
+    } catch (fetchError) {
+      setError(getErrorMessage(fetchError, "Failed to fetch tasks"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     void loadTasks();
   }, []);
 
@@ -164,6 +162,7 @@ export default function Dashboard() {
     setForm({
       id: task.id,
       title: task.title,
+      description: task.description,
       status: task.status,
     });
     setError(null);
@@ -177,26 +176,28 @@ export default function Dashboard() {
       try {
         setError(null);
 
-        const res = await fetch("/api/tasks", {
-          method: isEditing ? "PUT" : "POST",
-          credentials: "include",
+        const res = await apiClient("/api/tasks", {
+          method: isEditing ? "PATCH" : "POST",
           body: JSON.stringify(
             isEditing
               ? {
                   id: form.id,
                   title: form.title,
+                  description: form.description,
                   status: form.status,
                 }
               : {
                   title: form.title,
+                  description: form.description,
                   status: form.status,
                 },
           ),
-          headers: {
-            "Content-Type": "application/json",
-          },
         });
-        debugger;
+
+        if (!res) {
+          throw new Error("Network request failed or returned no response");
+        }
+
         const payload = await res.json();
 
         if (!payload) {
@@ -209,18 +210,18 @@ export default function Dashboard() {
         }
 
         const savedTask = readTask(payload);
-        if (!savedTask) {
-          throw new Error("Invalid task response");
-        }
-
-        if (isEditing) {
-          setTasks((currentTasks) =>
-            (currentTasks ?? []).map((task) =>
-              task.id === savedTask.id ? savedTask : task,
-            ),
-          );
+        if (savedTask) {
+          if (isEditing) {
+            setTasks((currentTasks) =>
+              (currentTasks ?? []).map((task) =>
+                task.id === savedTask.id ? savedTask : task,
+              ),
+            );
+          } else {
+            setTasks((currentTasks) => [savedTask, ...(currentTasks ?? [])]);
+          }
         } else {
-          setTasks((currentTasks) => [savedTask, ...(currentTasks ?? [])]);
+          await loadTasks();
         }
 
         closeModal();
@@ -236,14 +237,14 @@ export default function Dashboard() {
         setDeletingId(id);
         setError(null);
 
-        const res = await fetch("/api/tasks", {
+        const res = await apiClient("/api/tasks", {
           method: "DELETE",
-          credentials: "include",
           body: JSON.stringify({ id }),
-          headers: {
-            "Content-Type": "application/json",
-          },
         });
+
+        if (!res) {
+          throw new Error("Network request failed or returned no response");
+        }
 
         const payload = await res.json();
 
@@ -377,6 +378,29 @@ export default function Dashboard() {
               <div className="space-y-2">
                 <label
                   className="text-sm font-medium text-slate-700"
+                  htmlFor="description"
+                >
+                  Description
+                </label>
+                <input
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                  id="description"
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }))
+                  }
+                  placeholder="Enter task description"
+                  required
+                  type="text"
+                  value={form.description}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  className="text-sm font-medium text-slate-700"
                   htmlFor="status"
                 >
                   Status
@@ -395,7 +419,7 @@ export default function Dashboard() {
                   value={form.status}
                 >
                   <option value="STARTED">STARTED</option>
-                  <option value="IN_PROGRESS">IN PROGRESS</option>
+                  <option value="IN PROGRESS">IN PROGRESS</option>
                   <option value="COMPLETED">COMPLETED</option>
                 </select>
               </div>

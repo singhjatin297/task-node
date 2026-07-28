@@ -1,13 +1,12 @@
 # Task Manager App
 
-A small full-stack task manager built to practice authentication, API routes, Prisma, PostgreSQL, and Docker in a Next.js app.
+A small full-stack task manager built to practice authentication, API routes, a Go backend, PostgreSQL, and Docker with a Next.js frontend.
 
 ## What This Project Does
 
 - redirects users to login or dashboard based on the refresh-token cookie
 - logs users in with JWT-based access and refresh tokens
 - stores users and tasks in PostgreSQL
-- uses Prisma as the ORM layer
 - lets authenticated users create, update, list, and soft-delete tasks
 - runs locally with Docker Compose
 
@@ -16,7 +15,6 @@ A small full-stack task manager built to practice authentication, API routes, Pr
 - Next.js 16
 - React 19
 - TypeScript
-- Prisma
 - PostgreSQL
 - Docker Compose
 - `jose` for JWT handling
@@ -25,8 +23,7 @@ A small full-stack task manager built to practice authentication, API routes, Pr
 
 This project was built as a learning exercise for:
 
-- connecting a Next.js app to PostgreSQL
-- using Prisma with a relational database
+- connecting a Next.js app to a backend service
 - understanding Docker images, containers, networks, and volumes
 - handling simple authentication with access and refresh tokens
 
@@ -37,15 +34,10 @@ Create a `.env` file from `.env.example`.
 Required variables:
 
 ```env
-DATABASE_URL="postgresql://postgres:example@localhost:5432/postgres"
+BACKEND_URL="http://back:8080"
 NEXT_LOGIN_ACCESS_SECRET="replace-with-a-long-random-string"
 NEXT_LOGIN_REFRESH_SECRET="replace-with-a-different-long-random-string"
-NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="your-supabase-publishable-key"
 ```
-
-Note:
-The codebase still contains Supabase helper files, so the Supabase public variables are still expected at runtime even though PostgreSQL is now running in Docker.
 
 ## Run Locally Without Docker
 
@@ -53,18 +45,6 @@ Install dependencies:
 
 ```bash
 pnpm install
-```
-
-Generate the Prisma client:
-
-```bash
-pnpm prisma generate
-```
-
-Run database migrations:
-
-```bash
-pnpm prisma migrate dev
 ```
 
 Start the app:
@@ -85,9 +65,9 @@ docker compose -f Compose.yml up --build
 
 Services:
 
-- app: `http://localhost:3002`
-- Adminer: `http://localhost:8080`
-- PostgreSQL: `localhost:5432`
+- web: `http://localhost:3004`
+- back: `http://localhost:8080`
+- redis: `localhost:6379`
 
 If you want a fresh database volume while learning:
 
@@ -95,18 +75,6 @@ If you want a fresh database volume while learning:
 docker compose -f Compose.yml down -v
 docker compose -f Compose.yml up --build
 ```
-
-## Database
-
-Prisma schema and migrations are stored in:
-
-- [`prisma/schema.prisma`](./prisma/schema.prisma)
-- [`prisma/migrations`](./prisma/migrations)
-
-Current models:
-
-- `users`
-- `tasks`
 
 ## API Routes
 
@@ -119,7 +87,6 @@ Main route handlers live in `app/api`:
 
 ## Known Limitations
 
-- the project still has some Supabase-specific helper code even though the main database is now PostgreSQL with Prisma
 - `script.ts` is treated as a local scratch/seed script and is ignored from Git
 - Docker uses a simple development setup and is not production-hardened
 

@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function Login() {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [email, setEmail] = useState<string>("user@example.com");
+  const [password, setPassword] = useState<string>("Password@123");
   const { setToken } = useAuth();
   const router = useRouter();
 
@@ -19,10 +19,6 @@ export default function Login() {
       const res = await fetch("/api/login", {
         method: "POST",
         body: JSON.stringify(data),
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
       });
 
       const result = await res.json();

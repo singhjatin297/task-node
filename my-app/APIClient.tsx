@@ -1,9 +1,8 @@
 import { useCallback } from "react";
-
 import { useAuth } from "./context/auth";
 
 export const useApiClient = () => {
-  const { getAccessToken, logout } = useAuth();
+  const { getAccessToken } = useAuth();
 
   const client = useCallback(
     async (url: string, options: RequestInit = {}) => {
@@ -11,8 +10,7 @@ export const useApiClient = () => {
         const accessToken = await getAccessToken();
 
         if (!accessToken) {
-          await logout();
-          return null;
+          throw new Error("Unauthorized");
         }
 
         const res = await fetch(url, {
@@ -20,21 +18,21 @@ export const useApiClient = () => {
           ...options,
           headers: {
             ...options.headers,
-            // Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
         });
 
-        const data = await res.json();
-        if (!res.ok || data.status == 401) {
-          throw new Error("Internal Server Error");
-        }
-        return data;
+        // const data = await res.json();
+        // if (!res.ok || data.status == 401) {
+        //   throw new Error("Internal Server Error");
+        // }
+        return res;
       } catch (err) {
         throw new Error(`Error: ${err}`);
       }
     },
-    [getAccessToken, logout],
+    [getAccessToken],
   );
   return client;
 };

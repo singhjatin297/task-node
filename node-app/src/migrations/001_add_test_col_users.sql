@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE users
+ADD COLUMN "test" text NOT NULL;
+
+COMMIT;

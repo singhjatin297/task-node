@@ -1,0 +1,25 @@
+version: "1.0"
+
+services:
+  web:
+    build: ./my-app
+    ports:
+      - "3004:3004"
+    env_file:
+      - ./my-app/.env
+    depends_on:
+      - back
+
+  back:
+    build: ./node-app
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./node-app/.env
+    depends_on:
+      - my-redis
+
+  my-redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"

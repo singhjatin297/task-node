@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, password }: userCredentials = body;
 
-    const res = await fetch(getBackendUrl("login"), {
+    const res = await fetch(getBackendUrl("authapi/login"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -31,28 +31,29 @@ export async function POST(request: NextRequest) {
 
     const data = await res.json();
 
-    const goIssuedToken = data?.token;
+    const token = data?.tokens;
 
     const cookieStore = await cookies();
     const isProd = process.env.NODE_ENV === "production";
 
-    console.log("TOKEN LOGGED IN : ", goIssuedToken);
-
     cookieStore.set({
       name: "token",
-      value: goIssuedToken,
+      value: token?.RefreshToken,
       httpOnly: true,
       path: "/",
-      maxAge: 60 * 60 * 2,
+      maxAge: 60 * 60 * 24 * 30,
       secure: isProd,
       sameSite: "lax",
     });
 
     return NextResponse.json(
-      { message: "Login successful!", token: goIssuedToken },
+      { message: "Login successful!", token: token?.AccessToken },
       { status: 200 },
     );
-  } catch (err) {
-    return NextResponse.json({ error: "Invalid Request" }, { status: 400 });
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : "Unknown error occurred";
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
