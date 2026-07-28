@@ -25,7 +25,7 @@ export const loginService = async (email: string, password: string) => {
 
     const RefreshSecret = process.env.REFRESH_SECRET;
     if (!RefreshSecret) {
-      throw new Error("REFRESH JWT SECRET NOT CONFIGURED");
+      throw new Error("MISSING REFRESH JWT SECRET");
     }
     const RefreshToken = jwt.sign({ email: userData.email }, RefreshSecret, {
       expiresIn: "30d",
