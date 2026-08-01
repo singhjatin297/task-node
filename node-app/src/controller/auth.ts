@@ -1,11 +1,15 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import {
   loginService,
   refreshService,
   signupService,
 } from "../service/auth.js";
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(401).json({ error: "Email or Password is missing" });
@@ -17,11 +21,15 @@ export const login = async (req: Request, res: Response) => {
       .json({ message: "login successful!!", tokens: token });
   } catch (err) {
     console.log("Login unsuccessful: ", err);
-    return res.status(500).json({ error: "Login failed" });
+    next(err);
   }
 };
 
-export const signup = async (req: Request, res: Response) => {
+export const signup = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(401).json({ error: "Email or Password is missing" });
@@ -31,11 +39,15 @@ export const signup = async (req: Request, res: Response) => {
     return res.status(200).json({ data, message: "Signup successful!!" });
   } catch (err) {
     console.log("Signup unsuccessful: ", err);
-    return res.status(500).json({ error: "Signup failed" });
+    next(err);
   }
 };
 
-export const refresh = async (req: Request, res: Response) => {
+export const refresh = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.slice(7);
 
@@ -50,6 +62,6 @@ export const refresh = async (req: Request, res: Response) => {
       .json({ tokens: data, message: "Refresh successful !!" });
   } catch (err) {
     console.log("Refresh unsuccessful: ", err);
-    return res.status(401).json({ error: "Refresh failed" });
+    next(err);
   }
 };

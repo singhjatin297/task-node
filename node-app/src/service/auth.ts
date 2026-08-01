@@ -71,7 +71,7 @@ export const signupService = async (email: string, password: string) => {
 
       const AccessSecret = process.env.ACCESS_SECRET;
       if (!AccessSecret) {
-        throw new Error("ACCESS JWT SECRET NOT CONFIGURED");
+        throw new Error("MISSING ACCESS JWT SECRET");
       }
       const AccessToken = jwt.sign({ email: userData.email }, AccessSecret, {
         expiresIn: "1h",
@@ -86,10 +86,7 @@ export const signupService = async (email: string, password: string) => {
     }
   } catch (err) {
     console.log("Error in signup: ", err);
-    return {
-      status: 500,
-      error: err,
-    };
+    throw err;
   }
 };
 
